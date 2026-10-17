@@ -6,11 +6,10 @@ api = ../../api
 shared_api = ../../shared/permission_manager_api
 config = ../../configs/plugins/permission_manager
 
-all:
+.PHONY: all
+all: api
 	rm -f *.zip
 	rm -f ${cur}.dll ${cur}.pdb ${cur}.deps.json
-	# the shared API is referenced as a compiled dll, keep it in sync
-	$(MAKE) -C ${shared_api}
 	dotnet build
 	cp ${out}/${cur}.dll ${out}/${cur}.pdb ${out}/${cur}.deps.json .
 	# Copy NuGet dependency DLLs not already provided by CS2 API
@@ -22,14 +21,17 @@ all:
 		esac; \
 	done
 
-.PHONY: test
-test:
-	# the tests exercise the shared API, so it has to be rebuilt first
+.PHONY: api
+api:
 	$(MAKE) -C ${shared_api}
+
+.PHONY: test
+test: api
 	dotnet test tests/permission_manager_tests/permission_manager_tests.csproj
 
 .PHONY: release_full
-release_full:
+release_full: all
+	rm -f ${cur}_${version}.zip
 	mkdir -p addons/counterstrikesharp/plugins/${cur}
 	mkdir -p addons/counterstrikesharp/configs/plugins/${cur}
 	mkdir -p addons/counterstrikesharp/shared/${cur}_api
