@@ -1,8 +1,8 @@
 bin/*
 obj/*
 addons/*
-tests/bin/*
-tests/obj/
+tests/permission_manager_tests/bin/*
+tests/permission_manager_tests/obj/
 .vs/
 *.zip
 *.dll
