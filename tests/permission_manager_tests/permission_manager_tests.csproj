@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>permission_manager_tests</AssemblyName>
+    <RootNamespace>permission_manager.tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Same HintPaths the plugin uses, so the tests bind to the identical assembly
+         instances the plugin was compiled against. -->
+    <Reference Include="permission_manager_api">
+      <HintPath>../../../../shared/permission_manager_api/permission_manager_api.dll</HintPath>
+    </Reference>
+
+    <Reference Include="CounterStrikeSharp.API">
+      <HintPath>../../../../api/CounterStrikeSharp.API.dll</HintPath>
+    </Reference>
+
+    <ProjectReference Include="../../permission_manager.csproj" />
+  </ItemGroup>
+</Project>

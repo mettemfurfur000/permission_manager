@@ -1,0 +1,11 @@
+bin/*
+obj/*
+addons/*
+tests/bin/*
+tests/obj/
+.vs/
+*.zip
+*.dll
+*.pdb
+*.deps.json
+*.sln
