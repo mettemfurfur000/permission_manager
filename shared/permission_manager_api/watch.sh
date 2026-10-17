@@ -1,20 +1,18 @@
 #!/bin/bash
 
-WATCH_DIR="./src"       # Directory to watch
-API_DIR="../../shared/permission_manager_api"  # also a build input (make builds it first)
+WATCH_DIR="."           # Directory to watch
 COMPILE_COMMAND="make"  # Command to execute on change (e.g., make, npm run build)
 SLEEP_INTERVAL=2        # Seconds to wait between checks
 
 # Initialize last modification state
-LAST_STATE=$(find "$WATCH_DIR" "$API_DIR" -maxdepth 1 -name "*.cs" -type f -print0 2>/dev/null | xargs -0 md5sum)
+LAST_STATE=$(find "$WATCH_DIR" -maxdepth 1 -name "*.cs" -type f -print0 | xargs -0 md5sum)
 
 echo "Watching directory: $WATCH_DIR"
-echo "Watching directory: $API_DIR"
 echo "Compile command: $COMPILE_COMMAND"
 
 while true; do
     sleep "$SLEEP_INTERVAL"
-    CURRENT_STATE=$(find "$WATCH_DIR" "$API_DIR" -maxdepth 1 -name "*.cs" -type f -print0 2>/dev/null | xargs -0 md5sum)
+    CURRENT_STATE=$(find "$WATCH_DIR" -maxdepth 1 -name "*.cs" -type f -print0 | xargs -0 md5sum)
 
     if [ "$CURRENT_STATE" != "$LAST_STATE" ]; then
         echo "File changes detected! Recompiling..."

@@ -15,15 +15,21 @@
     </Reference>
 
     <Reference Include="permission_manager_api">
-      <HintPath>../../shared/permission_manager_api/permission_manager_api.dll</HintPath>
+      <HintPath>shared/permission_manager_api/permission_manager_api.dll</HintPath>
     </Reference>
   </ItemGroup>
 
-  <!-- tests/ has its own csproj and must stay out of the plugin assembly -->
+  <!-- tests/ and shared/ have their own csproj files and must stay out of the plugin assembly -->
   <ItemGroup>
     <Compile Remove="tests/**" />
     <EmbeddedResource Remove="tests/**" />
     <None Remove="tests/**" />
     <None Include="tests/**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="shared/**" />
+    <EmbeddedResource Remove="shared/**" />
+    <None Remove="shared/**" />
+    <None Include="shared/**" />
   </ItemGroup>
 </Project>

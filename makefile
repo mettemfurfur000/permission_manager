@@ -3,7 +3,7 @@ out = bin/Debug/net10.0
 files = ${out}/${cur}.*
 version = ${shell grep -oP '(?<=ModuleVersion => ")[0-9.]+' src/main.cs}
 api = ../../api
-shared_api = ../../shared/permission_manager_api
+shared_api = shared/permission_manager_api
 config = ../../configs/plugins/permission_manager
 
 .PHONY: all

@@ -19,7 +19,7 @@
     <!-- Same HintPaths the plugin uses, so the tests bind to the identical assembly
          instances the plugin was compiled against. -->
     <Reference Include="permission_manager_api">
-      <HintPath>../../../../shared/permission_manager_api/permission_manager_api.dll</HintPath>
+      <HintPath>../../shared/permission_manager_api/permission_manager_api.dll</HintPath>
     </Reference>
 
     <Reference Include="CounterStrikeSharp.API">

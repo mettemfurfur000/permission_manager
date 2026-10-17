@@ -21,15 +21,16 @@ make release_full    # package plugin + shared API + data files into addons/, th
 | Project | Location | Build separately? |
 |---|---|---|
 | Main plugin | `permission_manager.csproj` (this dir) | `make` (also builds the API first) |
-| Shared API | `../../shared/permission_manager_api/` | Its own `makefile`; `make` here runs it |
+| Shared API | `shared/permission_manager_api/` (inside this repo) | Its own `makefile`; `make` here runs it |
 | Tests | `tests/permission_manager_tests/` | `make test`, or `dotnet test` (132 tests) |
 
-The plugin references the shared API as a compiled `.dll` via `HintPath`. If you change the API interface, run
-`make` or `make test` (both build the API first) or `make -C ../../shared/permission_manager_api`.
+The plugin references the shared API as a compiled `.dll` via `HintPath` (`shared/permission_manager_api/permission_manager_api.dll`).
+If you change the API interface, run `make` or `make test` (both build the API first) or
+`make -C shared/permission_manager_api`.
 
 **Do not replace the `<Reference HintPath>` with a `ProjectReference`.** The API has to exist as a standalone DLL
-in `shared/` at runtime; that is the whole point of the split (see below). `make test` building the API first
-matters: `dotnet test` on its own would compile the tests against a **stale** API DLL and quietly pass.
+at runtime; that is the whole point of the split. `make test` building the API first matters: `dotnet test` on its
+own would compile the tests against a **stale** API DLL and quietly pass.
 
 ## Project structure
 
@@ -38,6 +39,7 @@ matters: `dotnet test` on its own would compile the tests against a **stale** AP
 - `src/config/config.cs` — config POCO. CSS generates `permission_manager.json` from it on first launch.
 - `src/storage/PermissionStore.cs` — `permissions.json` load/save, normalisation, group closure cache,
   per-user snapshots, all mutations.
+- `shared/permission_manager_api/` — the contract assembly (pure logic + interfaces). Built first by `make`.
 - `src/gating/CommandGate.cs` — `commands.json`, `AddCommandListener` registration, denial handling.
 - `src/commands/PermissionCommands.cs` — every `css_perm_*` command (a `partial class` of the plugin).
 - `src/utils/ChatFormat.cs` — `{lightred}`-style colour tags and `{command}`/`{node}` substitution.

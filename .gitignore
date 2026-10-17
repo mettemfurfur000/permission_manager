@@ -1,6 +1,11 @@
 bin/*
 obj/*
 addons/*
+shared/**/bin/*
+shared/**/obj/
+shared/**/*.dll
+shared/**/*.pdb
+shared/**/*.deps.json
 tests/permission_manager_tests/bin/*
 tests/permission_manager_tests/obj/
 .vs/

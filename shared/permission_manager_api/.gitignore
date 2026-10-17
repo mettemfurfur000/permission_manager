@@ -1,0 +1,10 @@
+bin/*
+obj/*
+addons/*
+*.zip
+*.dll
+*.pdb
+*.txt
+*.deps.json
+*.sln
+boing/*
