@@ -380,7 +380,7 @@ public partial class PermissionManagerPlugin
                     ? string.Empty
                     : $" - {discovered.Description}";
 
-                Reply(info, $"{discovered.Command}{description}  [{discovered.Owner}]");
+                Reply(info, $"{discovered.Command}{description}  [{discovered.Author}.{discovered.Plugin}]");
             }
 
             Reply(info, Colored(ChatColors.Grey,
@@ -405,14 +405,14 @@ public partial class PermissionManagerPlugin
             var data = new DiscoveredCommandFile();
 
             foreach (DiscoveredCommand discovered in commands)
-                data.Commands[discovered.Command] = discovered.Command;
+                data.Commands[discovered.Command] = discovered.SuggestedNode;
 
             string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(path, json);
 
             Reply(info, Colored(ChatColors.Green,
                 $"Wrote {commands.Count} command(s) to '{path}'. "
-                + "Each command is mapped to a node of the same name; review and merge into commands.json as needed."));
+                + "Each command is mapped to a suggested node 'author.plugin.command'; review and merge into commands.json as needed."));
         }
         catch (Exception ex)
         {

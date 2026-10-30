@@ -19,7 +19,10 @@ public sealed record DiscoveredCommand(
     string Command,
     string Description,
     string ExecutableBy,
-    string Owner);
+    string Owner,
+    string Author,
+    string Plugin,
+    string SuggestedNode);
 
 public sealed class DiscoveredCommandFile
 {
@@ -127,11 +130,18 @@ public static class CommandDiscovery
                 string owner = definition.Callback?.Target?.GetType().FullName ?? string.Empty;
                 string executableBy = definition.ExecutableBy.ToString();
 
+                var (author, pluginName) = ResolvePluginIdentity(definition.Callback?.Target, definition.Callback?.Method.DeclaringType);
+                string resolvedCommand = definition.Name.Length == 0 ? command : definition.Name;
+                string suggestedNode = BuildSuggestedNode(author, pluginName, resolvedCommand);
+
                 commands.Add(new DiscoveredCommand(
-                    definition.Name.Length == 0 ? command : definition.Name,
+                    resolvedCommand,
                     definition.Description ?? string.Empty,
                     executableBy,
-                    owner));
+                    owner,
+                    author,
+                    pluginName,
+                    suggestedNode));
             }
         }
 
@@ -145,5 +155,86 @@ public static class CommandDiscovery
 
         error = null;
         return true;
+    }
+
+    private static (string Author, string Plugin) ResolvePluginIdentity(object? target, Type? declaringType)
+    {
+        BasePlugin? plugin = target as BasePlugin;
+
+        if (plugin is null && target is not null)
+        {
+            foreach (FieldInfo field in target.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (field.GetValue(target) is BasePlugin candidate)
+                {
+                    plugin = candidate;
+                    break;
+                }
+            }
+        }
+
+        if (plugin is not null)
+        {
+            string author = NormalizeSegment(plugin.ModuleAuthor);
+            string name = NormalizeSegment(plugin.ModuleName);
+
+            if (author.Length == 0)
+                author = "unknown";
+            if (name.Length == 0)
+                name = NormalizeSegment(plugin.GetType().Name);
+
+            return (author, name);
+        }
+
+        Type type = declaringType ?? target?.GetType() ?? typeof(object);
+        string fallbackAuthor = NormalizeSegment(type.Namespace);
+        if (fallbackAuthor.Length == 0)
+            fallbackAuthor = NormalizeSegment(type.Assembly.GetName().Name);
+        if (fallbackAuthor.Length == 0)
+            fallbackAuthor = "unknown";
+
+        string fallbackPlugin = NormalizeSegment(type.Name);
+        if (fallbackPlugin.Length == 0)
+            fallbackPlugin = "plugin";
+
+        // Trim a trailing "Plugin" suffix noise is intentionally kept: the type name is
+        // the most stable identifier available without an instance.
+
+        return (fallbackAuthor, fallbackPlugin);
+    }
+
+    private static string BuildSuggestedNode(string author, string plugin, string command)
+    {
+        string a = NormalizeSegment(author);
+        string p = NormalizeSegment(plugin);
+        string c = NormalizeSegment(command);
+
+        if (a.Length == 0)
+            a = "unknown";
+        if (p.Length == 0)
+            p = "plugin";
+        if (c.Length == 0)
+            c = "command";
+
+        return $"{a}.{p}.{c}";
+    }
+
+    private static string NormalizeSegment(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        string trimmed = value.Trim().ToLowerInvariant();
+        var chars = new System.Text.StringBuilder(trimmed.Length);
+
+        foreach (char ch in trimmed)
+        {
+            if (char.IsWhiteSpace(ch))
+                chars.Append('_');
+            else
+                chars.Append(ch);
+        }
+
+        return chars.ToString();
     }
 }
