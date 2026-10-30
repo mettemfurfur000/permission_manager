@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -324,6 +325,99 @@ public partial class PermissionManagerPlugin
             _gate.MapEnabled
                 ? "Global command listener: enabled."
                 : "Global command listener: disabled (EnableCommandMap in permission_manager.json)."));
+    }
+
+    // ------------------------------------------------------------- discovery
+
+    [ConsoleCommand("css_perm_scan", "Reflectively list commands registered by all plugins")]
+    [CommandHelper(minArgs: 0, usage: "[write [path]]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+    public void OnScanCommands(CCSPlayerController? player, CommandInfo info)
+    {
+        if (!RequireAdmin(player, info))
+            return;
+
+        if (!CommandDiscovery.Preflight(out string? preflightError))
+        {
+            Reply(info, Colored(ChatColors.Red, preflightError!));
+            return;
+        }
+
+        if (!CommandDiscovery.TryScan(CommandManager, out List<DiscoveredCommand> commands, out string? scanError))
+        {
+            Reply(info, Colored(ChatColors.Red, scanError!));
+            return;
+        }
+
+        bool write = false;
+        string? targetPath = null;
+
+        for (int i = 1; i < info.ArgCount; i++)
+        {
+            string arg = info.GetArg(i);
+
+            if (arg.Equals("write", StringComparison.OrdinalIgnoreCase)
+                || arg.Equals("save", StringComparison.OrdinalIgnoreCase)
+                || arg.Equals("--write", StringComparison.OrdinalIgnoreCase)
+                || arg.Equals("-w", StringComparison.OrdinalIgnoreCase))
+            {
+                write = true;
+            }
+            else if (arg.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                     || arg.Contains('/') || arg.Contains('\\'))
+            {
+                targetPath = arg;
+                write = true;
+            }
+        }
+
+        if (!write)
+        {
+            Reply(info, Colored(ChatColors.LightBlue, $"Discovered {commands.Count} registered command(s):"));
+
+            foreach (DiscoveredCommand discovered in commands)
+            {
+                string description = string.IsNullOrWhiteSpace(discovered.Description)
+                    ? string.Empty
+                    : $" - {discovered.Description}";
+
+                Reply(info, $"{discovered.Command}{description}  [{discovered.Owner}]");
+            }
+
+            Reply(info, Colored(ChatColors.Grey,
+                "Run 'css_perm_scan write' to save a commands.json-style template to "
+                + Path.Combine(DataDirectory, "discovered_commands.json") + "."));
+            return;
+        }
+
+        string path = targetPath is null
+            ? Path.Combine(DataDirectory, "discovered_commands.json")
+            : (Path.IsPathRooted(targetPath)
+                ? targetPath
+                : Path.GetFullPath(Path.Combine(DataDirectory, targetPath)));
+
+        try
+        {
+            string? directory = Path.GetDirectoryName(path);
+
+            if (!string.IsNullOrEmpty(directory))
+                Directory.CreateDirectory(directory);
+
+            var data = new DiscoveredCommandFile();
+
+            foreach (DiscoveredCommand discovered in commands)
+                data.Commands[discovered.Command] = discovered.Command;
+
+            string json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(path, json);
+
+            Reply(info, Colored(ChatColors.Green,
+                $"Wrote {commands.Count} command(s) to '{path}'. "
+                + "Each command is mapped to a node of the same name; review and merge into commands.json as needed."));
+        }
+        catch (Exception ex)
+        {
+            Reply(info, Colored(ChatColors.Red, $"Failed to write '{path}': {ex.Message}"));
+        }
     }
 
     // --------------------------------------------------------------- lifecycle
